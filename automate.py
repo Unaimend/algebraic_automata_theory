@@ -19,6 +19,7 @@ def simulate_fsm(start_state, input_string: str, transitions: Dict[Tuple[str, st
   return current_state 
 
 
+# Creates the whole table until words of length N
 def create_table(transitions, input_alphabet, N = 5):
   real_res = {}
   # Generate all possible concatenations
@@ -37,7 +38,7 @@ def create_table(transitions, input_alphabet, N = 5):
         pass
         #print("----------------")
     real_res[s] = res
-  return real_res
+  return pd.DataFrame.from_dict(real_res)
 
 
 # Create a directed graph
@@ -54,6 +55,14 @@ def plot(transitions):
   dot.render('fsm_graph', format='png', cleanup=False)  # Saves as 'fsm_graph.png'
   dot
 
+
+def get_states(transitions):
+  a = []
+  for((start_state, _), end_state) in transitions.items():
+    a.append(start_state)
+    a.append(end_state)
+  return list(set(a))
+
 # Define the transitions
 transitions = {
     ('q0', 'a'): 'q0',
@@ -63,12 +72,6 @@ transitions = {
     ('q2', 'b'): 'q0'
 }
 
-def get_states(transitions):
-  a = []
-  for((s, l), ss) in transitions.items():
-    a.append(s)
-    a.append(ss)
-  return list(set(a))
 
 
 #transitions = {
@@ -83,16 +86,8 @@ def get_states(transitions):
 
 
 
-res = create_table(transitions, ['a','b','c'], N = 5)
-res2 = pd.DataFrame.from_dict(res)
-
-
-
-
-
-
-#pd.set_option("display.max_rows", None)
-#pd.set_option("display.max_columns", None)
+res2 = create_table(transitions, ['a','b','c'], N = 5)
+print(res2)
 is_duplicate = res2.duplicated(keep='first')
 res2['is_duplicate'] = is_duplicate
 res2['section'] = res2.index.str.len()
