@@ -85,27 +85,31 @@ transitions = {
 
 
 
+def table_to_eqv_class(res2):
+  is_duplicate = res2.duplicated(keep='first')
+  res2['is_duplicate'] = is_duplicate
+  res2['section'] = res2.index.str.len()
+
+  # Tells us if table is really complete
+  #result = res2.groupby('section')['is_duplicate'].all().reset_index()
+  #print(result)
+
+
+  def assign_custom_value(group):
+      group['eqv_class'] = group.index[0]
+      return group
+  
+  # Group by specific columns and apply the custom function
+  res3 = res2.groupby(get_states(transitions)).apply(assign_custom_value, include_groups=False)
+  for s in get_states(transitions):
+    res3 = res3.droplevel(s)
+  
+  res3_sorted = res3.sort_values(by='eqv_class')
+  #print(res3_sorted)
+  u = res3_sorted['eqv_class'].unique()
+  return u
+
 
 res2 = create_table(transitions, ['a','b','c'], N = 5)
-print(res2)
-is_duplicate = res2.duplicated(keep='first')
-res2['is_duplicate'] = is_duplicate
-res2['section'] = res2.index.str.len()
-print(res2)
-result = res2.groupby('section')['is_duplicate'].all().reset_index()
-
-def assign_custom_value(group):
-    group['eqv_class'] = group.index[0]
-    return group
-
-# Group by specific columns and apply the custom function
-res3 = res2.groupby(get_states(transitions)).apply(assign_custom_value)
-for s in get_states(transitions):
-  res3 = res3.droplevel(s)
-
-res3_sorted = res3.sort_values(by='eqv_class')
-print(res3_sorted)
-print(result)
-
-u = res3_sorted['eqv_class'].unique()
+u = table_to_eqv_class(res2)
 print(u)
