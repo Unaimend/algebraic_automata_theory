@@ -142,6 +142,7 @@ def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes):
     result3 = []
 
     eqv_classes_to_longes = create_table(transitions, input_alphabet, N = longest_class + 1)
+    # TODO Check for the third tuple argument otherwise we might not have all eqv. classes
     u, class_, _= add_representatives(transitions, eqv_classes_to_longes)
 
     for a, b, ab in result2:
