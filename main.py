@@ -78,4 +78,4 @@ if __name__ == "__main__":
     print(f'Printing semigroup')
     u, class_, _ = automate.add_representatives(automaton, eqv_classes)
     r = automate.eqv_class_to_semigroup(automaton,['a','b','c'], u)
-    print(r)
+    print(automate.format_semitable(r))

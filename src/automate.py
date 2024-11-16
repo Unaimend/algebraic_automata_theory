@@ -2,12 +2,14 @@ import pandas as pd
 from graphviz import Digraph
 from itertools import product
 from typing import Dict, Tuple, List
+from tabulate import tabulate
 
 State = str
 Letter = str
 StateMachine = Dict[Tuple[State, Letter], State]
 
 EqvTable = pd.DataFrame
+Semigroup = pd.DataFrame
 
 
 def get_states(transitions):
@@ -87,23 +89,6 @@ l1 = {
     ('q2', 'b'): 'q0'
 }
 
-
-
-l2 = {
-    ('q0', 'a'): 'q0',
-    ('q1', 'a'): 'q1',
-    ('q0', 'b'): 'q1',
-    ('q1', 'c'): 'q0',
-}
-
-
-l3 = {
-    ('q0', 'a'): 'q0', 
-    ('q0', 'b'): 'q1', 
-    ('q1', 'b'): 'q0', 
-    ('q1', 'c'): 'q2', 
-    ('q2', 'b'): 'q0'}
-
 #plot(transitions)
 
 
@@ -134,7 +119,7 @@ def add_representatives(transitions: StateMachine, res2: EqvTable):
   return (u, res3_sorted, result)
 
 
-def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes):
+def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes) -> Semigroup:
     result = [s1 + s2 for s1 in eqv_classes for s2 in eqv_classes]
     result2 = [(s1, s2, s1 + s2) for s1 in eqv_classes for s2 in eqv_classes]
     longest_class = len(max(result, key=len))
@@ -156,6 +141,11 @@ def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes):
       
     return result
 
+def format_semitable(s: Semigroup):
+  s = s.map(lambda x: f"[{x}]")
+  s.index = [f"[{i}]" for i in s.index]
+  s.columns = [f"[{col}]" for col in s.columns]
+  return tabulate(s, headers="keys", tablefmt="grid")
 
 #res2 = create_table(l1, ['a','b','c'], N = 5)
 #u, class_, _ = add_representatives(l1, res2)
