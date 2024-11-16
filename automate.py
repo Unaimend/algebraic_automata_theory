@@ -107,9 +107,34 @@ def table_to_eqv_class(res2):
   res3_sorted = res3.sort_values(by='eqv_class')
   #print(res3_sorted)
   u = res3_sorted['eqv_class'].unique()
-  return u
+  return (u, res3_sorted)
 
+
+def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes):
+    result = [s1 + s2 for s1 in eqv_classes for s2 in eqv_classes]
+    result2 = [(s1, s2, s1 + s2) for s1 in eqv_classes for s2 in eqv_classes]
+    longest_class = len(max(result, key=len))
+    
+    result3 = []
+
+    eqv_classes_to_longes = create_table(transitions, input_alphabet, N = longest_class + 1)
+    u, class_= table_to_eqv_class(eqv_classes_to_longes)
+
+    for a, b, ab in result2:
+      c = class_.loc[ab]
+      result3.append((a,b, c["eqv_class"]))
+
+    df = pd.DataFrame(result3, columns=['Row', 'Column', 'Value'])
+    
+    # Pivot the DataFrame
+    result = df.pivot(index='Row', columns='Column', values='Value')
+      
+    return result
 
 res2 = create_table(transitions, ['a','b','c'], N = 5)
-u = table_to_eqv_class(res2)
+u, class_ = table_to_eqv_class(res2)
+
 print(u)
+
+r = eqv_class_to_semigroup(transitions,['a','b','c'], u)
+print(r)
