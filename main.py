@@ -68,7 +68,11 @@ if __name__ == "__main__":
   
   if args.table:
     print(f'Printing eqv. classes')
-    print(eqv_classes)
+    eqv_with_rep = automate.add_representatives(automaton, eqv_classes)
+    print(eqv_with_rep[1])
+    print("\n\n\n")
+    print("Are are eqv. of length n duplicate?\nIf one of the last columns entries are true your specied work length is long enough.")
+    print(eqv_with_rep[2])
     print("\n\n\n")
 
   if args.dot:

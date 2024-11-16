@@ -99,10 +99,10 @@ def add_representatives(transitions: StateMachine, res2: EqvTable):
   """
   is_duplicate = res2.duplicated(keep='first')
   res2['is_duplicate'] = is_duplicate
-  res2['section'] = res2.index.str.len()
+  res2['length'] = res2.index.str.len()
 
   # Tells us if table is really complete
-  result = res2.groupby('section')['is_duplicate'].all().reset_index()
+  result = res2.groupby('length')['is_duplicate'].all().reset_index()
 
   def assign_custom_value(group):
       group['eqv_class'] = group.index[0]
