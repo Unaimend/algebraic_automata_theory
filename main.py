@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser(description="A program that converts a given st
 parser.add_argument(
     "-d", "--dot", 
     type=str,
-    help = "CURRENTY NOT WORKING PROPERLY: Specyfing this flag will generate a .dot file of the automata, pelase specify a filename",
+    help = "Specyfing this flag will generate a .dot file of the automata, pelase specify a filename",
     required=False  # Makes this argument mandatory
 )
 
