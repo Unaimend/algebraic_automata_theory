@@ -1,9 +1,23 @@
 import pandas as pd
 from graphviz import Digraph
 from itertools import product
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
-def simulate_fsm(start_state, input_string: str, transitions: Dict[Tuple[str, str], str]) -> str:
+State = str
+Letter = str
+StateMachine = Dict[Tuple[State, Letter], State]
+
+EqvTable = pd.DataFrame
+
+
+def get_states(transitions):
+  a = []
+  for((start_state, _), end_state) in transitions.items():
+    a.append(start_state)
+    a.append(end_state)
+  return set(a)
+
+def simulate_fsm(start_state, input_string: str, transitions: StateMachine) -> str:
   current_state = start_state  # Start state
   #print(f"Initial State: {current_state}")
   for symbol in input_string:
@@ -19,8 +33,16 @@ def simulate_fsm(start_state, input_string: str, transitions: Dict[Tuple[str, st
   return current_state 
 
 
-# Creates the whole table until words of length N
-def create_table(transitions, input_alphabet, N = 5):
+def create_table(transitions: StateMachine, input_alphabet: List[Letter], N: int = 5) -> EqvTable:
+  """
+  Creates the eqv. classes (based on \\delta_w) for a given state machine.
+  Only eqv. classes of length < N are being calculated
+
+  Args:
+    transitions StateMachine:
+    input_alphabet (List[Letter]):
+    N (int):
+  """
   real_res = {}
   # Generate all possible concatenations
   all_concatenations = []
@@ -28,7 +50,7 @@ def create_table(transitions, input_alphabet, N = 5):
       for combination in product(input_alphabet, repeat=length):
           all_concatenations.append(''.join(combination))
   # Display permutations
-  for s in ["q0", "q1", "q2"]:
+  for s in get_states(transitions):
     #print(f"Starting from {s}")
     res = {}
     for i, perm in enumerate(all_concatenations):
@@ -42,7 +64,7 @@ def create_table(transitions, input_alphabet, N = 5):
 
 
 # Create a directed graph
-def plot(transitions):
+def plot(transitions: StateMachine, filename: str):
   dot = Digraph()
   
   # Add nodes and edges from the transition dictionary
@@ -52,19 +74,12 @@ def plot(transitions):
       dot.edge(start_state, end_state, label=symbol)  # add transition edge
   
   # Save or render the graph
-  dot.render('fsm_graph', format='png', cleanup=False)  # Saves as 'fsm_graph.png'
-  dot
+  dot.render(filename, format='png', cleanup=False)  # Saves as 'fsm_graph.png'
 
 
-def get_states(transitions):
-  a = []
-  for((start_state, _), end_state) in transitions.items():
-    a.append(start_state)
-    a.append(end_state)
-  return list(set(a))
 
 # Define the transitions
-transitions = {
+l1 = {
     ('q0', 'a'): 'q0',
     ('q0', 'b'): 'q1',
     ('q1', 'b'): 'q0',
@@ -74,40 +89,49 @@ transitions = {
 
 
 
-#transitions = {
-#    ('q0', 'a'): 'q0',
-#    ('q1', 'a'): 'q1',
-#    ('q0', 'b'): 'q1',
-#    ('q1', 'c'): 'q0',
-#}
+l2 = {
+    ('q0', 'a'): 'q0',
+    ('q1', 'a'): 'q1',
+    ('q0', 'b'): 'q1',
+    ('q1', 'c'): 'q0',
+}
+
+
+l3 = {
+    ('q0', 'a'): 'q0', 
+    ('q0', 'b'): 'q1', 
+    ('q1', 'b'): 'q0', 
+    ('q1', 'c'): 'q2', 
+    ('q2', 'b'): 'q0'}
 
 #plot(transitions)
 
 
-
-def table_to_eqv_class(res2):
+# TODO Test first and last element of tuple return
+def add_representatives(transitions: StateMachine, res2: EqvTable):
+  """
+  Adds the smallest representative of the eqv. to the input words
+  """
   is_duplicate = res2.duplicated(keep='first')
   res2['is_duplicate'] = is_duplicate
   res2['section'] = res2.index.str.len()
 
   # Tells us if table is really complete
-  #result = res2.groupby('section')['is_duplicate'].all().reset_index()
-  #print(result)
-
+  result = res2.groupby('section')['is_duplicate'].all().reset_index()
 
   def assign_custom_value(group):
       group['eqv_class'] = group.index[0]
       return group
   
   # Group by specific columns and apply the custom function
-  res3 = res2.groupby(get_states(transitions)).apply(assign_custom_value, include_groups=False)
+  res3 = res2.groupby(list(get_states(transitions))).apply(assign_custom_value, include_groups=False)
   for s in get_states(transitions):
     res3 = res3.droplevel(s)
   
   res3_sorted = res3.sort_values(by='eqv_class')
   #print(res3_sorted)
   u = res3_sorted['eqv_class'].unique()
-  return (u, res3_sorted)
+  return (u, res3_sorted, result)
 
 
 def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes):
@@ -118,7 +142,7 @@ def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes):
     result3 = []
 
     eqv_classes_to_longes = create_table(transitions, input_alphabet, N = longest_class + 1)
-    u, class_= table_to_eqv_class(eqv_classes_to_longes)
+    u, class_, _= add_representatives(transitions, eqv_classes_to_longes)
 
     for a, b, ab in result2:
       c = class_.loc[ab]
@@ -131,10 +155,10 @@ def eqv_class_to_semigroup(transitions, input_alphabet, eqv_classes):
       
     return result
 
-res2 = create_table(transitions, ['a','b','c'], N = 5)
-u, class_ = table_to_eqv_class(res2)
 
-print(u)
-
-r = eqv_class_to_semigroup(transitions,['a','b','c'], u)
-print(r)
+#res2 = create_table(l1, ['a','b','c'], N = 5)
+#u, class_, _ = add_representatives(l1, res2)
+#
+##print(u)
+##
+#r = eqv_class_to_semigroup(l1,['a','b','c'], u)
