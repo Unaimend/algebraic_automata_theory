@@ -19,9 +19,11 @@ jobs:
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
+      shell: bash -el {0}
       run: |
         conda env create --name aat --file environment.yaml
     - name: actifvate env
+      shell: bash -el {0}
       run: |
         conda activate aat
     - name: Test with unit test
