@@ -68,6 +68,9 @@ class TestAutomatonToState(unittest.TestCase):
 
 class TestSemigroupToAutomaton(unittest.TestCase):
   def semigroup_to_machine(self):
+    """
+    This semigroup toggles between a and b on 1 and says on a or b on 0.
+    """
     states = ["a", "b"]
     semigroup = pd.DataFrame( 
                              {"0":["0", "1"], 
@@ -87,9 +90,8 @@ class TestSemigroupToAutomaton(unittest.TestCase):
         print(f"SemigroupElement {sge} with State {s}")
         raise Exception("Operation not defined")
 
-    res = semigroup_to_machine((states, semigroup, action))
-    print(res)
-    plot(res, "test")
+    #res = semigroup_to_machine((states, semigroup, action))
+    res = compatability(states, semigroup, action)
 
     
     

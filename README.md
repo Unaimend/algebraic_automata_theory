@@ -38,7 +38,8 @@ python3 main.py --aut examples/lecture_1.csv -N 5 --dot test.png
 ```
 
 ## Running the program on a given semigroup
-Currently you can only specify an semigroup in code.
+Currently you can only specify an semigroup in code. Further we do check for 
+* compatibility
 
 ```python
 states = ["a", "b"]

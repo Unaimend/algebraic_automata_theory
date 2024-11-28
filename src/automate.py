@@ -160,24 +160,38 @@ def format_semitable(s: Semigroup):
 
 
 def compatability(states: List[State], sg: Semigroup, a: Action, filter_sames = True):
-  pass
+  action_results = []
+  for g1 in sg.index:
+    for g2 in sg.index:
+      for s in states:
+        #q*(g1*g1)
+        sge = sg.at[g1, str(g2)]
+        res = a(s, sge)
+
+        #(q*g1)*g2
+        res11 = a(s, g1)
+        res22 = a(res11, g2)
+        if res != res22:
+          print(f"q*(g1*g2) {res} != (q*g1)*g2 {res22}")
+          return False
+  return True
+        
 
 def faithfullness(states: List[State], sg: Semigroup, a: Action, filter_sames = True):
   # TODO Think about this some more
   action_results = []
-  for s in states:
-    for g1 in sg.index:
-      for g2 in sg.index:
-        if g1 != g2:
-          #q*g1
+  for g1 in sg.index:
+    for g2 in sg.index:
+      for s in states:
+          #Calculate q*g1
           res1 = a(s, g1)
-          #q*g2
+          #Calculate q*g2
           res2 = a(s, g2)
           action_results.append([s, g1, res1 == res2, s, g2])
 
   action_results = pd.DataFrame(action_results)
   action_results.columns = ['q', 'g1', 'is_same', 'q', 'q2']
-  return action_results[action_results['is_same'] == True]
+  return action_results
 
 
 
@@ -197,6 +211,10 @@ def execute_semigroup(states: List[State], sg: Semigroup, a: Action, filter_same
 
 
 def semigroup_to_machine(tsg: TransformationSemigroup):
+  if compatability(tsg[0], tsg[1], tsg[2]) == False:
+    print("Semigroup action not compatible")   
+    return
+
   action_table = execute_semigroup(tsg[0], tsg[1], tsg[2])
   transformations = {}
 
