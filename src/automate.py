@@ -19,6 +19,13 @@ def get_states(transitions):
     a.append(end_state)
   return set(a)
 
+
+def get_alphabet(transitions):
+  a: List[Letter] = []
+  for((_, letter), _) in transitions.items():
+    a.append(letter)
+  return list(set(a))
+
 def simulate_fsm(start_state, input_string: str, transitions: StateMachine) -> str:
   current_state = start_state  # Start state
   #print(f"Initial State: {current_state}")

@@ -63,11 +63,14 @@ if __name__ == "__main__":
     print(f'Loading automaton from examples/lecture_1.csv')
     df = pd.read_csv("examples/lecture_1.csv", header = None)
     automaton = {(row[0], row[1]) : row[2] for row in df.values }
+
+  # TODDO Fix hardcoded alphabet
     
-  eqv_classes = automate.create_table(automaton, ['a','b','c'], N = args.N)
+  eqv_classes = automate.create_table(automaton, automate.get_alphabet(automaton), N = args.N)
   
   if args.table:
     print(f'Printing eqv. classes')
+    print(eqv_classes)
     eqv_with_rep = automate.add_representatives(automaton, eqv_classes)
     print(eqv_with_rep[1])
     print("\n\n\n")
@@ -81,5 +84,5 @@ if __name__ == "__main__":
   if not args.no_print_semig:
     print(f'Printing semigroup')
     u, class_, _ = automate.add_representatives(automaton, eqv_classes)
-    r = automate.eqv_class_to_semigroup(automaton,['a','b','c'], u)
+    r = automate.eqv_class_to_semigroup(automaton,automate.get_alphabet(automaton), u)
     print(automate.format_semitable(r))
