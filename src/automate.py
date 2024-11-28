@@ -1,15 +1,18 @@
 import pandas as pd
 from graphviz import Digraph
 from itertools import product
-from typing import Dict, Tuple, List
+from typing import Callable, Dict, Tuple, List
 from tabulate import tabulate
 
 State = str
 Letter = str
+SemigroupElement = str
 StateMachine = Dict[Tuple[State, Letter], State]
 
 EqvTable = pd.DataFrame
 Semigroup = pd.DataFrame
+Action = Callable[[State, SemigroupElement], State]
+TransformationSemigroup = (List[State], Semigroup, Action)
 
 
 def get_states(transitions):
@@ -154,9 +157,51 @@ def format_semitable(s: Semigroup):
   s.columns = [f"[{col}]" for col in s.columns]
   return tabulate(s, headers="keys", tablefmt="grid")
 
-#res2 = create_table(l1, ['a','b','c'], N = 5)
-#u, class_, _ = add_representatives(l1, res2)
-#
-##print(u)
-##
-#r = eqv_class_to_semigroup(l1,['a','b','c'], u)
+
+
+def compatability(states: List[State], sg: Semigroup, a: Action, filter_sames = True):
+  pass
+
+def faithfullness(states: List[State], sg: Semigroup, a: Action, filter_sames = True):
+  # TODO Think about this some more
+  action_results = []
+  for s in states:
+    for g1 in sg.index:
+      for g2 in sg.index:
+        if g1 != g2:
+          #q*g1
+          res1 = a(s, g1)
+          #q*g2
+          res2 = a(s, g2)
+          action_results.append([s, g1, res1 == res2, s, g2])
+
+  action_results = pd.DataFrame(action_results)
+  action_results.columns = ['q', 'g1', 'is_same', 'q', 'q2']
+  return action_results[action_results['is_same'] == True]
+
+
+
+
+def execute_semigroup(states: List[State], sg: Semigroup, a: Action, filter_sames = True):
+  # TODO Think about this some more
+  action_results = []
+  for s in states:
+    for g1 in sg.index:
+        res = a(s, g1)
+        action_results.append([s, g1, res])
+
+  action_results = pd.DataFrame(action_results)
+  action_results.columns = ['q', 'g1', 'action_result']
+  return action_results
+
+
+
+def semigroup_to_machine(tsg: TransformationSemigroup):
+  action_table = execute_semigroup(tsg[0], tsg[1], tsg[2])
+  transformations = {}
+
+  for _, q1, l, q2 in action_table.itertuples():
+    transformations[(q1, str(l))] = q2
+  
+  return transformations
+

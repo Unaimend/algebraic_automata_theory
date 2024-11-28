@@ -37,6 +37,33 @@ You can plot, layout and export the automata with the `--dot` flag.
 python3 main.py --aut examples/lecture_1.csv -N 5 --dot test.png
 ```
 
+## Running the program on a given semigroup
+Currently you can only specify an semigroup in code.
+
+```python
+states = ["a", "b"]
+semigroup = pd.DataFrame( 
+                         {"0":["0", "1"], 
+                          "1": ["1", "0"]}
+                         )
+semigroup.set_index(["0", "1"])
+
+def action(s: State, sge: SemigroupElement) -> Optional[State]:
+  if str(sge) == "0":
+    return s
+  elif str(sge) == "1":
+    if s == "a":
+      return "b"
+    if s == "b":
+      return "a"
+  else:
+    print(f"SemigroupElement {sge} with State {s}")
+    raise Exception("Operation not defined")
+
+res = semigroup_to_machine((states, semigroup, action))
+plot(res, "test")
+```
+
 
 ## Automate format
 To sepcify an automate via csv use the following format
