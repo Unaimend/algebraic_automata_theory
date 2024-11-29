@@ -3,6 +3,7 @@ from graphviz import Digraph
 from itertools import product
 from typing import Callable, Dict, Tuple, List
 from tabulate import tabulate
+from typing import Optional
 
 State = str
 Letter = str
@@ -11,7 +12,7 @@ StateMachine = Dict[Tuple[State, Letter], State]
 
 EqvTable = pd.DataFrame
 Semigroup = pd.DataFrame
-Action = Callable[[State, SemigroupElement], State]
+Action = Callable[[State, SemigroupElement], Optional[State]]
 TransformationSemigroup = (List[State], Semigroup, Action)
 
 
@@ -170,6 +171,8 @@ def compatability(states: List[State], sg: Semigroup, a: Action, filter_sames = 
 
         #(q*g1)*g2
         res11 = a(s, g1)
+        if res11 is None:
+          raise NotImplementedError
         res22 = a(res11, g2)
         if res != res22:
           print(f"q*(g1*g2) {res} != (q*g1)*g2 {res22}")
@@ -197,7 +200,6 @@ def faithfullness(states: List[State], sg: Semigroup, a: Action, filter_sames = 
 
 
 def execute_semigroup(states: List[State], sg: Semigroup, a: Action, filter_sames = True):
-  # TODO Think about this some more
   action_results = []
   for s in states:
     for g1 in sg.index:
@@ -223,3 +225,90 @@ def semigroup_to_machine(tsg: TransformationSemigroup):
   
   return transformations
 
+from itertools import product
+
+def generate_combinations(keys, values):
+    # Generate all possible combinations of values for each key
+    all_combinations = list(product(values, repeat=len(keys)))
+    
+    # Create a dictionary for each combination
+    result = [dict(zip(keys, comb)) for comb in all_combinations]
+    return result
+
+
+
+def check_homom_multiple_state(tsm1, tsm2, alpha, beta) -> bool:
+  """h
+  Checks if alpha(qDelta_a) \subset (alha(q))Delta'_a\beta(a)
+  for all a for a mapping that throws each state q_i to a fixed q'
+  Returns true if it is a homo 
+  """
+
+  def dict_or_func(f, v):
+    if isinstance(f, dict):
+      return f[v]
+    else:
+      return f(v)
+  states = sorted(list(get_states(tsm1)))
+  alphabet = sorted(get_alphabet(tsm1))
+  for state in states:
+    for letter in alphabet:
+      # Caclulate alpha(qD_a)
+      try:
+        nextStateLeft = tsm1[(state, letter)]
+        res = dict_or_func(alpha, nextStateLeft)
+        #print("left", state, nextStateLeft, letter, res)
+      except KeyError:
+        res = ""
+      try:
+        t = (dict_or_func(alpha, state), dict_or_func(beta, letter))
+        res2 = tsm2[t]
+        #print("right", t, res2)
+      except KeyError:
+        res2 = ""
+      #print("S", {res}, {res2})
+      #print({res} in {res2})
+      if ([res] <= [res2]) == False:
+        return False
+
+  return True
+
+def try_full_homoms_beta_alpha(tsm1: StateMachine, tsm2: StateMachine):
+  """
+  Defines homo that throws all states to a single state and keep beta as the identity
+  Returns true if it is a homo 
+  """
+  # TODO Those are quite specific requieremnets to the states aka each the states must be named the same except the '
+  homoms = []
+  # TODO USE dicts instead of functions:
+  s1 = sorted(get_states(tsm1))
+  s2 = sorted(get_states(tsm2))
+  l1 = sorted(get_alphabet(tsm1))
+  l2 = sorted(get_alphabet(tsm2))
+  betas = generate_combinations(l1,l2 )
+  alphas = generate_combinations(s1,s2)
+  for a in alphas:
+    for b in betas:
+      res = check_homom_multiple_state(tsm1, tsm2, a, b)
+      homoms.append((str(a), str(b), res))
+
+
+
+  homoms_df = pd.DataFrame(homoms)
+  homoms_df.columns = ["alpha", "beta", "is_homom"]
+  homoms_df.sort_values(by=["alpha", "beta", "is_homom"], inplace = True, ignore_index=True)
+  return(homoms_df)
+
+
+  #return homoms_df
+
+    
+
+
+def generate_homom(tsm1: StateMachine, tsm2: StateMachine):
+  states1 = get_states(tsm1)
+  states2 = get_states(tsm2)
+  alphabet1 = get_alphabet(tsm1)
+  alphabet2 = get_alphabet(tsm2)
+
+  
