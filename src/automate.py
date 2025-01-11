@@ -82,9 +82,9 @@ def plot(transitions: StateMachine, filename: str):
   
   # Add nodes and edges from the transition dictionary
   for (start_state, symbol), end_state in transitions.items():
-      dot.node(start_state)  # add starting state node
-      dot.node(end_state)    # add ending state node
-      dot.edge(start_state, end_state, label=symbol)  # add transition edge
+      dot.node(str(start_state))  # add starting state node
+      dot.node(str(end_state))    # add ending state node
+      dot.edge(str(start_state), str(end_state), label=symbol)  # add transition edge
   
   # Save or render the graph
   dot.render(filename, format='png', cleanup=False)  # Saves as 'fsm_graph.png'
@@ -238,7 +238,7 @@ def generate_combinations(keys, values):
 
 
 def check_homom_multiple_state(tsm1, tsm2, alpha, beta) -> bool:
-  """h
+  """
   Checks if alpha(qDelta_a) \subset (alha(q))Delta'_a\beta(a)
   for all a for a mapping that throws each state q_i to a fixed q'
   Returns true if it is a homo 
@@ -304,11 +304,16 @@ def try_full_homoms_beta_alpha(tsm1: StateMachine, tsm2: StateMachine):
 
     
 
+def restricted_direct_product(sm1: StateMachine, sm2: StateMachine) -> StateMachine:
+  assert get_alphabet(sm1) == get_alphabet(sm2)
+  s1 = sorted(get_states(sm1))
+  s2 = sorted(get_states(sm2))
+  cartesian_product = list(product(s1, s2))
+  new_sm = {}
+  for (start_state1, start_state2) in cartesian_product:
+    for letter in get_alphabet(sm1):
+      end_state1 = simulate_fsm(start_state1, letter, sm1)
+      end_state2 = simulate_fsm(start_state2, letter, sm2)
+      new_sm[((start_state1, start_state2), letter)] = (end_state1, end_state2)
 
-def generate_homom(tsm1: StateMachine, tsm2: StateMachine):
-  states1 = get_states(tsm1)
-  states2 = get_states(tsm2)
-  alphabet1 = get_alphabet(tsm1)
-  alphabet2 = get_alphabet(tsm2)
-
-  
+  return new_sm

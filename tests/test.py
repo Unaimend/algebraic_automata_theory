@@ -114,13 +114,17 @@ class TestSemigroupToAutomaton(unittest.TestCase):
                         TestSemigroupToAutomaton.action2)
     self.assertFalse(res)
 
-
+  def test_generate_combinations(self):
+    pass
+      #r = generate_combinations(TestAutomatonToState.one_state_two_trans)
+      #print(r)
 
   def semigroup_to_machine(self):
     """
     This semigroup toggles between a and b on 1 and says on a or b on 0.
     """
     #res = semigroup_to_machine((states, semigroup, action))
+
 
 
 
@@ -144,7 +148,6 @@ class TestSemigroupToAutomaton(unittest.TestCase):
 
     homoms =  try_full_homoms_beta_alpha(sm1, sm2)
     ret = homoms.equals(expected)
-
     self.assertTrue(ret)
 
 
@@ -227,7 +230,7 @@ class TestSemigroupToAutomaton(unittest.TestCase):
     expected.sort_values(by=["alpha", "beta", "is_homom"], inplace = True, ignore_index=True)
     homoms =  try_full_homoms_beta_alpha(sm1, sm2)
     ret = homoms.equals(expected)
-
+    self.assertTrue(ret)
 
 
   def test_check_homom_all_states_with_beta_1(self):
@@ -297,7 +300,6 @@ class TestSemigroupToAutomaton(unittest.TestCase):
     expected.sort_values(by=["alpha", "beta", "is_homom"], inplace = True, ignore_index=True)
 
     homoms = try_full_homoms_beta_alpha(sm1, sm2)
-    print(homoms)
     self.assertTrue(homoms.equals(expected))
 
 
@@ -322,3 +324,16 @@ class TestSemigroupToAutomaton(unittest.TestCase):
 
   #  homoms = try_full_homoms_beta_alpha(sm1, sm2)
   #  print(homoms)
+
+  def test_restricted_direct_product(self):
+    sm1 = {
+      ('q0', 'a'): 'q1',
+      ('q1', 'a'): 'q0',
+    }
+    sm2 = {
+      ('p0', 'a'): 'p0',
+    }
+    r = restricted_direct_product(sm1, sm2)
+    plot(sm1, "sm1")
+    plot(sm2, "sm2")
+    plot(r, "dw")
