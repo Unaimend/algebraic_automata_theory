@@ -335,10 +335,7 @@ class TestSemigroupToAutomaton(unittest.TestCase):
       ('p0', 'a'): 'p0',
     }
     r = restricted_direct_product(sm1, sm2)
-    plot(sm1, "sm1")
-    plot(sm2, "sm2")
-    plot(r, "dw")
-
+    print("TODO")
 
   ####### EXAM EXAMPLES
 
@@ -421,4 +418,23 @@ class TestSemigroupToAutomaton(unittest.TestCase):
     homs = try_full_homoms_beta_alpha(sm1, sm2)
     print(homs)
 
+  def test_adm_part(self):
+    sm1 = {
+      ('q0', 'a'): 'q1',
+      ('q1', 'a'): 'q0',
+      ('q0', 'b'): 'q0',
+      ('q1', 'b'): 'q1',
+      }
+ 
 
+
+    sm1 = {
+      ('q0', 'a'): 'q1',
+      ('q1', 'a'): 'q2',
+      ('q2', 'a'): 'q3',
+      ('q3', 'a'): 'q1',
+      }
+
+    part = [{"q0"}, {"q2", "q1", "q3"}]
+    letter = "a"
+    print(try_all_adm_parts(sm1))

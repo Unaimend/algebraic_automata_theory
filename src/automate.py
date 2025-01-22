@@ -16,12 +16,12 @@ Action = Callable[[State, SemigroupElement], Optional[State]]
 TransformationSemigroup = (List[State], Semigroup, Action)
 
 
-def get_states(transitions):
+def get_states(transitions) -> frozenset:
   a = []
   for((start_state, _), end_state) in transitions.items():
     a.append(start_state)
     a.append(end_state)
-  return set(a)
+  return frozenset(a)
 
 
 def get_alphabet(transitions):
@@ -235,9 +235,78 @@ def generate_combinations(keys, values):
     result = [dict(zip(keys, comb)) for comb in all_combinations]
     return result
 
+def check_adm_part(sm1: StateMachine, partition, letter):
+  # for the set_to_try we have to figure out if there exist another 
+  # set such that when we apply the letter to all states from set_to_try
+  # we end up in another set from the partition
+  
+  # The set that we end up in if the try all the letters
+  new_blocks = dict()
+  #print("letter", letter)
+  for block in partition:
+    #print("block ", block)
+    new_block = set()
+    # we check for each state in a block where we end up
+    for start in block:
+      next_state  = simulate_fsm(start, letter, sm1)
+      new_block = new_block.union([next_state])
+    new_blocks[frozenset(block)] = new_block
+    #now we have a new_block
+    #but we have to check if it occurs some where in the old block list
+    #print("new block", new_block)
+    ret = False 
+    for block_ in partition:
+      t = new_block.issubset(block_)
+    #  print("block_", block_)
+    #  print("t", t)
+      ret = ret | t
+      #print("RET", ret)
 
+    if ret == False:
+      return False
+  return True
+    
+  
 
-def check_homom_multiple_state(tsm1, tsm2, alpha, beta) -> bool:
+def try_all_adm_parts(sm1):
+  def partition_menge(s):
+    if not s:
+      return [[]]
+    result = []
+    first = next(iter(s))  # Ein Element aus der Menge auswählen
+    rest = s - {first}
+    for smaller_partition in partition_menge(rest):
+      for i in range(len(smaller_partition)):
+        new_partition = smaller_partition[:i] + [smaller_partition[i] | {first}] + smaller_partition[i+1:]
+        result.append(new_partition)
+      result.append([frozenset([first])] + smaller_partition)
+    return result
+  parts = partition_menge(get_states(sm1))
+  res = {}
+  for part in parts:
+    #print(part)
+    res[frozenset(part)] = True 
+    for l in get_alphabet(sm1):
+      t = check_adm_part(sm1, part, l)
+      res[frozenset(part)] = res[frozenset(part)] & t
+    #print("-----------------------------")
+
+  # Convert the frozensets into a list of tuples
+  flattened_data = []
+  for key, value in res.items():
+      # Extract the single frozenset and convert it into a list of sets
+      inner_sets = [set(inner_set) for inner_set in key]
+      flattened_data.append([inner_sets, value])
+    
+  # Create the DataFrame
+  df = pd.DataFrame(flattened_data, columns=["Set", "Value"])
+  
+  # Display the DataFrame
+
+  df_sorted = df.sort_values(by='Value', ascending=False)
+  return(df_sorted)
+
+def check_homom_multiple_state(sm1, sm2, alpha, beta) -> bool:
   """
   Checks if alpha(qDelta_a) \\subset (alha(q))Delta'_a\beta(a)
   for all a for a mapping that throws each state q_i to a fixed q'
@@ -249,20 +318,20 @@ def check_homom_multiple_state(tsm1, tsm2, alpha, beta) -> bool:
       return f[v]
     else:
       return f(v)
-  states = sorted(list(get_states(tsm1)))
-  alphabet = sorted(get_alphabet(tsm1))
+  states = sorted(list(get_states(sm1)))
+  alphabet = sorted(get_alphabet(sm1))
   for state in states:
     for letter in alphabet:
       # Caclulate alpha(qD_a)
       try:
-        nextStateLeft = tsm1[(state, letter)]
+        nextStateLeft = sm1[(state, letter)]
         res = dict_or_func(alpha, nextStateLeft)
         #print("left", state, nextStateLeft, letter, res)
       except KeyError:
         res = ""
       try:
         t = (dict_or_func(alpha, state), dict_or_func(beta, letter))
-        res2 = tsm2[t]
+        res2 = sm2[t]
         #print("right", t, res2)
       except KeyError:
         res2 = ""
@@ -275,7 +344,7 @@ def check_homom_multiple_state(tsm1, tsm2, alpha, beta) -> bool:
 
   return True
 
-def try_full_homoms_beta_alpha(tsm1: StateMachine, tsm2: StateMachine):
+def try_full_homoms_beta_alpha(sm1: StateMachine, sm2: StateMachine):
   """
   Defines homo that throws all states to a single state and keep beta as the identity
   Returns true if it is a homo 
@@ -283,17 +352,17 @@ def try_full_homoms_beta_alpha(tsm1: StateMachine, tsm2: StateMachine):
   # TODO Those are quite specific requieremnets to the states aka each the states must be named the same except the '
   homoms = []
   # TODO USE dicts instead of functions:
-  s1 = sorted(get_states(tsm1))
-  s2 = sorted(get_states(tsm2))
-  l1 = sorted(get_alphabet(tsm1))
-  l2 = sorted(get_alphabet(tsm2))
+  s1 = sorted(get_states(sm1))
+  s2 = sorted(get_states(sm2))
+  l1 = sorted(get_alphabet(sm1))
+  l2 = sorted(get_alphabet(sm2))
   betas = generate_combinations(l1,l2 )
   alphas = generate_combinations(s1,s2)
   for a in alphas:
     #print(a)
     for b in betas:
       #print(b)
-      res = check_homom_multiple_state(tsm1, tsm2, a, b)
+      res = check_homom_multiple_state(sm1, sm2, a, b)
       #print(res)
       homoms.append((str(a), str(b), res))
       #print("-------------------")
@@ -323,3 +392,6 @@ def restricted_direct_product(sm1: StateMachine, sm2: StateMachine) -> StateMach
       new_sm[((start_state1, start_state2), letter)] = (end_state1, end_state2)
 
   return new_sm
+
+
+
