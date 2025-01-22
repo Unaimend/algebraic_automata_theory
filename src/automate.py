@@ -239,7 +239,7 @@ def generate_combinations(keys, values):
 
 def check_homom_multiple_state(tsm1, tsm2, alpha, beta) -> bool:
   """
-  Checks if alpha(qDelta_a) \subset (alha(q))Delta'_a\beta(a)
+  Checks if alpha(qDelta_a) \\subset (alha(q))Delta'_a\beta(a)
   for all a for a mapping that throws each state q_i to a fixed q'
   Returns true if it is a homo 
   """
@@ -266,10 +266,12 @@ def check_homom_multiple_state(tsm1, tsm2, alpha, beta) -> bool:
         #print("right", t, res2)
       except KeyError:
         res2 = ""
-      #print("S", {res}, {res2})
-      #print({res} in {res2})
-      if ([res] <= [res2]) == False:
+      #print("S", [res], [res2])
+      #print("RET", set([res]).issubset(set([res2])))
+    
+      if set([res]).issubset(set([res2])) == False:
         return False
+    #print("++++++++++++++")
 
   return True
 
@@ -288,9 +290,13 @@ def try_full_homoms_beta_alpha(tsm1: StateMachine, tsm2: StateMachine):
   betas = generate_combinations(l1,l2 )
   alphas = generate_combinations(s1,s2)
   for a in alphas:
+    #print(a)
     for b in betas:
+      #print(b)
       res = check_homom_multiple_state(tsm1, tsm2, a, b)
+      #print(res)
       homoms.append((str(a), str(b), res))
+      #print("-------------------")
 
 
 

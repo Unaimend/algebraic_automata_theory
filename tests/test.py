@@ -1,6 +1,7 @@
 import unittest
 from src.automate import *
 from typing import Optional
+import pandas as pd
 
 import unittest
 
@@ -337,3 +338,87 @@ class TestSemigroupToAutomaton(unittest.TestCase):
     plot(sm1, "sm1")
     plot(sm2, "sm2")
     plot(r, "dw")
+
+
+  ####### EXAM EXAMPLES
+
+  ##
+
+  def test_bug_1(self): 
+    sm1 = {
+    ('q0', 'a'): 'q1',
+    ('q1', 'a'): 'q0',
+    ('q0', 'b'): 'q0',
+    ('q1', 'b'): 'q1',
+    }
+    
+    sm2 = {
+    ('q0\'', 'b'): 'q1\'',
+    ('q1\'', 'b'): 'q0\'',
+    ('q0\'', 'a'): 'q0\'',
+    ('q1\'', 'a'): 'q1\'',
+    }
+
+    alpha = {'q0': "q0'", 'q1': "q0'"}
+    beta1 =  {'a': 'a', 'b': 'a'}
+    beta2 =  {'a': 'a', 'b': 'b'}
+
+    self.assertTrue(check_homom_multiple_state(sm1, sm2, alpha, beta1))
+    self.assertFalse(check_homom_multiple_state(sm1, sm2, alpha, beta2))
+
+
+
+  def test_example_1(self):
+    sm1 = {
+      ('q0', 'a'): 'q1',
+      ('q1', 'a'): 'q0',
+      ('q0', 'b'): 'q0',
+      ('q1', 'b'): 'q1',
+    }
+
+    sm2 = {
+      ('q0\'', 'b'): 'q1\'',
+      ('q1\'', 'b'): 'q0\'',
+      ('q0\'', 'a'): 'q0\'',
+      ('q1\'', 'a'): 'q1\'',
+    }
+
+
+    eqv_classes_sm1 = create_table(sm1, get_alphabet(sm1), N = 3)
+    eqv_classes_sm2 = create_table(sm2, get_alphabet(sm2), N = 3)
+
+    eqv_classes_sm1 = add_representatives(sm1, eqv_classes_sm1)
+    eqv_classes_sm2 = add_representatives(sm2, eqv_classes_sm2)
+
+
+    
+    # Data for the first DataFrame
+    data_1 = {
+        'is_duplicate': [False, True, True, False, True, True],
+        'length': [1, 2, 2, 1, 2, 2],
+        'eqv_class': ['a', 'a', 'a', 'b', 'b', 'b'],
+    }
+    df1 = pd.DataFrame(data_1, index=['a', 'ab', 'ba', 'b', 'aa', 'bb'])
+    
+
+    print(df1)
+    print(eqv_classes_sm1[1])
+    self.assertTrue(df1.sort_index().equals(eqv_classes_sm1[1].sort_index()))
+
+    data_2 = {
+        'is_duplicate': [False, True, True, False, True, True],
+        'length': [1, 2, 2, 1, 2, 2],
+        'eqv_class': ['a', 'a', 'a', 'b', 'b', 'b'],
+    }
+    df2 = pd.DataFrame(data_2, index=['a', 'aa', 'bb', 'b', 'ab', 'ba'])
+    self.assertTrue(df2.sort_index().equals(eqv_classes_sm2[1].sort_index()))
+    
+    sm1_x_sm2 = restricted_direct_product(sm1, sm2)
+    expected = {(('q0', "q0'"), 'a'): ('q1', "q0'"), (('q0', "q0'"), 'b'): ('q0', "q1'"), (('q0', "q1'"), 'a'): ('q1', "q1'"), (('q0', "q1'"), 'b'): ('q0', "q0'"), (('q1', "q0'"), 'a'): ('q0', "q0'"), (('q1', "q0'"), 'b'): ('q1', "q1'"), (('q1', "q1'"), 'a'): ('q0', "q1'"), (('q1', "q1'"), 'b'): ('q1', "q0'")}
+
+    self.assertEqual(sorted(expected), sorted(sm1_x_sm2))
+
+    homs = try_full_homoms_beta_alpha(sm1, sm2)
+    print(homs)
+
+

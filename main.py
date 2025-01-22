@@ -67,6 +67,7 @@ if __name__ == "__main__":
   # TODDO Fix hardcoded alphabet
     
   eqv_classes = automate.create_table(automaton, automate.get_alphabet(automaton), N = args.N)
+
   
   if args.table:
     print(f'Printing eqv. classes')
